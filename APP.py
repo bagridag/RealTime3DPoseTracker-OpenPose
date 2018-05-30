@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import math
 import os
+import itertools
 
 from sklearn import svm
 from sklearn import preprocessing, linear_model
@@ -23,6 +24,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+
 
 
 cwd= os.getcwd()
@@ -268,6 +275,42 @@ for i in range(0, int(trainAmount)):
 
 print("Finished reading the training data")
 
+#COMMENT OUT IF YOU WANT TO PLOT THE CONFUSION MATRIX
+'''
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Purples):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+'''
 
 #DEFINE THE CLASSIFIERS TO COMPARE
 
@@ -286,36 +329,78 @@ linearLogisticRegressionCLF = linear_model.LogisticRegression(C=10)
 decisionTreeCLF = DecisionTreeClassifier(random_state=10)
 
 
+
+
+# Split into a training set and a test set using a stratified k fold
+
+# split into a training and testing set
+
+X_train, X_test, y_train, y_test = train_test_split(
+    xTrainR, lTrainR, test_size=0.25, random_state=42)
+
+
+print("Fitting the classifier to the training set")
+param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
+              'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
+clf = GridSearchCV(SVC(kernel='rbf', class_weight='balanced'), param_grid)
+clf = clf.fit(X_train, y_train)
+print("Best estimator found by grid search:")
+print(clf.best_estimator_)
+
+
+#COMMENT OUT IF YOU WANT TO ENABLE CONFUSION MATRIX
+# #############################################################################
+'''
+y_pred = clf.predict(X_test)
+
+print(classification_report(y_test, y_pred, target_names=["Punch", "Wave", "Shoot", "Stand_Still"]))
+print(confusion_matrix(y_test, y_pred))
+
+cnf_matrix = confusion_matrix(y_test, y_pred)
+
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=["Punch", "Wave", "Shoot", "Stand_Still"],title='Confusion matrix, without normalization')
+
+plt.show()
+
+
+# Plot normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=["Punch", "Wave", "Shoot", "Stand_Still"], normalize=True,
+                      title='Normalized confusion matrix')
+
+plt.show()
+'''
+
+
+##########################################################################
+
 ##LEFT HAND
+'''
 
-#kNeighborsCLF_Left = KNeighborsClassifier(n_neighbors=30)
+kNeighborsCLF_Left = KNeighborsClassifier(n_neighbors=30)
 
-#linearSVCCLF_Left= svm.LinearSVC(penalty='l2', C=3000,multi_class='ovr', max_iter=5000)
+linearSVCCLF_Left= svm.LinearSVC(penalty='l2', C=3000,multi_class='ovr', max_iter=5000)
 
-#svcCLF_Left = svm.SVC(kernel='rbf', C=2000, probability=True)
+svcCLF_Left = svm.SVC(kernel='rbf', C=2000, probability=True)
 
-#modelLinearRegressionCLF_Left = LinearRegression(normalize=False)
+modelLinearRegressionCLF_Left = LinearRegression(normalize=False)
 
-#linearLogisticRegressionCLF_Left = linear_model.LogisticRegression(C=10)
+linearLogisticRegressionCLF_Left = linear_model.LogisticRegression(C=10)
 
-#decisionTreeCLF_Left = DecisionTreeClassifier(random_state=10)
+decisionTreeCLF_Left = DecisionTreeClassifier(random_state=10)
 
-
+'''
 
 #CHECK OUTLIERS IN THE DATA USING BOXPLOT
+'''
+plt.boxplot(xTrain, notch=True, vert=True)
 
+plt.boxplot(xWave, notch=True, vert=True)
 
-#xPunchClear = removeOutliers(resPunchBox, xPunch)
+plt.boxplot(xShoot, notch= True, vert= True)
+'''
 
-#plt.boxplot(xTrain, notch=True, vert=True)
-#
-
-#plt.boxplot(xWave, notch=True, vert=True)
-
-#plt.boxplot(xShoot, notch= True, vert= True)
-
-#principal component analysis
-pca = PCA(n_components=3)
 
 print("Fitting to the model- Right Hand ")
 
@@ -341,17 +426,18 @@ print("Fitting to the model- Left Hand ")
 
 #modelLinearRegressionCLF_Left.fit(xTrainL, lTrainL)
 
-
+###################################
+###COMMENT OUT TO ENABLE THE PCA PLOT
+'''
+#principal component analysis
+pca = PCA(n_components=3)
 proj = pca.fit_transform(xTrainR)
-
 plt.scatter(proj[:, 0], proj[:, 1], c=lTrainR)
 plt.colorbar()
-
-
 proj = pca.fit_transform(xTrainL)
-
-#plt.scatter(proj[:, 0], proj[:, 1], c=lTrainL)
-#plt.colorbar()
+plt.scatter(proj[:, 0], proj[:, 1], c=lTrainL)
+plt.colorbar()
+'''
 #################################
 
 scoresLinearSVC = cross_val_score(linearSVCCLF, xTrainR, lTrainR, cv=5)
@@ -398,11 +484,6 @@ print(scoresDecisionTree)
 
 print("Accuracy Decision Tree: %0.2f (+/- %0.2f)" % (scoresDecisionTree.mean(), scoresDecisionTree.std() * 2))
 ############################################
-
-#Create and visualize the confusion matrices- TO DO
-       # y_pred = neigh.predict(xTrain)
-
-       # print(metrics.confusion_matrix(y_pred, lTrain))
 
 
 # Create a pipeline
@@ -496,9 +577,9 @@ def run():
     with_hands = True
     download_heatmaps = False
     # with_face = with_hands = False
-    op = OP.OpenPose((320, 240), (368, 368), (640, 480), "COCO", OPENPOSE_ROOT + os.sep + "models" + os.sep, 0,
-                     download_heatmaps, OP.OpenPose.ScaleMode.ZeroToOne, with_face, with_hands)
-    # op = OP.OpenPose((320, 240), (240, 240), (640, 480), "COCO", OPENPOSE_ROOT + os.sep + "models" + os.sep, 0, download_heatmaps)
+    #op = OP.OpenPose((320, 240), (368, 368), (640, 480), "COCO", OPENPOSE_ROOT + os.sep + "models" + os.sep, 0,
+                     #download_heatmaps, OP.OpenPose.ScaleMode.ZeroToOne, with_face, with_hands)
+    op = OP.OpenPose((320, 240), (368, 368), (640, 480), "COCO", OPENPOSE_ROOT + os.sep + "models" + os.sep, 0, download_heatmaps)
     actual_fps = 0
     #numberWave = 0
     #numberPunch = 0
@@ -506,7 +587,6 @@ def run():
     delay = {True: 0, False: 1}
 
     print("Entering main Loop.")
-    #trainSet()
 
 # Streaming loop
     while True:
@@ -624,7 +704,7 @@ def run():
             if rightTemp.max() > 0 or leftTemp.max() > 0 :
 
                 try:
-                    resultsvcCLF_Right = svcCLF.predict(normalizedTrainRightHand)[0]  # svm result
+                    #resultsvcCLF_Right = svcCLF.predict(normalizedTrainRightHand)[0]  # svm result
 
                     ##the other prediction models are just made for testing- can be used if wanted
                     resultGestureTree_Right = decisionTreeCLF.predict(normalizedTrainRightHand)[0]
@@ -635,6 +715,8 @@ def run():
                     #rr= svcCLF.decision_function(normalizedTrainRightHand)
                     #nn = kNeighborsCLF.decision_function(normalizedTrainRightHand)
                     #mm= linearSVCCLF.decision_function(normalizedTrainRightHand)
+
+                    resultsvcCLF_Right = clf.predict(normalizedTrainRightHand)[0]  # BEST FITTER RESULT
 
                     resultsvcCLF_Left = svcCLF.predict(normalizedTrainLeftHand)[0]  # svm result
 
