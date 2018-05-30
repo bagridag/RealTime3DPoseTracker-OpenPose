@@ -7,7 +7,7 @@ Machine: 4 GPU, GeForce GTX 1080
 OS: Ubuntu 16.04
 
 1) Clone the OpenPose repository: 
-	git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose
+	"git clone https://github.com/CMU-Perceptual-Computing-Lab/openpose"
 2) Check the currently integrated OpenPose version from PyOpenPose from the link: https://	github.com/FORTH-ModelBasedTracker/PyOpenPose
 
 3) Reset the OpenPose version to this commit by: 
@@ -42,7 +42,10 @@ make -j`nproc` (i.e. I use -j8)
 12) Change the installation folder under build/cmake_install.cmake using gedit to the install folder that you previously created such as: 
 set(CMAKE_INSTALL_PREFIX "/home/burcak/Desktop/openpose/install")
 13) If  you get access errors, just change the permissions to the file as: chmod 777 “fileName”
-14) Back to the terminal and : cd build/ and then sudo make install
+14) Back to the terminal and : 
+	- cd build/ 
+and then: 
+	- sudo make install
 15) Copy the MODELS folder in OpenPose root directory to this INSTALL folder.  If  you get access errors, just change the permissions to the file as: chmod 777 “folderName”
 16) Set an environment variable named OPENPOSE_ROOT pointing to the openpose INSTALL folder.
 17) Install python3.5 and pip3. 
