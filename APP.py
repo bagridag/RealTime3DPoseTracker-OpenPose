@@ -718,7 +718,7 @@ def run():
 
                     resultsvcCLF_Right = clf.predict(normalizedTrainRightHand)[0]  # BEST FITTER RESULT
 
-                    resultsvcCLF_Left = svcCLF.predict(normalizedTrainLeftHand)[0]  # svm result
+                    resultsvcCLF_Left = clf.predict(normalizedTrainLeftHand)[0]  # BEST FITTER RESULT
 
                     if resultsvcCLF_Right == 1:
                         rightGestureName = "Punch"
