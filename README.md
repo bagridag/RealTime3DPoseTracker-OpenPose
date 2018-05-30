@@ -92,12 +92,12 @@ i) Realsense:
 
 6) For the codes using the visualization of the skeleton only, install pygame for python3: sudo pip3 install pygame, OpenGL: "sudo apt-get install python3-opengl" and don’t forget to upgrade it otherwise some functions might not work: "pip3 install --upgrade PyOpenGL"
 
-7)Create a Project in PyCharm and click and expand Project INterpreter tab, select Python3 and inherit all the packages that are installed. Install the other required packages such as python numpy, sklearn, matplotlib, pandas, etc. 
+7) Create a Project in PyCharm and click and expand Project INterpreter tab, select Python3 and inherit all the packages that are installed. Install the other required packages such as python numpy, sklearn, matplotlib, pandas, etc. 
 
 
 ii) Kinect: 
-Follow the installation steps:  https://github.com/r9y9/pylibfreenect2 and http://r9y9.github.io/pylibfreenect2/latest/installation.html
-Don’t forget to add the pylibfreenect2 library to your PYTHONPATH and the other related installation paths, as an example, on my computer they are set as: 
+1) Follow the installation steps:  https://github.com/r9y9/pylibfreenect2 and http://r9y9.github.io/pylibfreenect2/latest/installation.html
+2) Don’t forget to add the pylibfreenect2 library to your PYTHONPATH and the other related installation paths, as an example, on my computer they are set as: 
     export LD_LIBRARY_PATH=”/home/burcak/Desktop/libfreenect2/build/lib”
     export LIBFREENECT2_INSTALL_PREFIX=”/home/burcak/freenect2”    
 
