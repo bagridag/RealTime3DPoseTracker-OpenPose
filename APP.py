@@ -4,6 +4,7 @@ import pyrealsense2 as rs
 import csv
 
 import pandasAnalysis
+import pandas as pd
 
 sys.path.append('/home/burcak/Desktop/PyOpenPose/build/PyOpenPoseLib')
 sys.path.append('/home/burcak/Desktop/libfreenect2/build/lib')
@@ -347,6 +348,8 @@ clf = clf.fit(X_train, y_train)
 print("Best estimator found by grid search:")
 print(clf.best_estimator_)
 
+classifier = clf.fit(xTrainR, lTrainR)
+
 
 #COMMENT OUT IF YOU WANT TO ENABLE CONFUSION MATRIX
 # #############################################################################
@@ -354,6 +357,7 @@ print(clf.best_estimator_)
 y_pred = clf.predict(X_test)
 
 print(classification_report(y_test, y_pred, target_names=["Punch", "Wave", "Shoot", "Stand_Still"]))
+
 print(confusion_matrix(y_test, y_pred))
 
 cnf_matrix = confusion_matrix(y_test, y_pred)
@@ -592,6 +596,7 @@ def run():
     while True:
         start_time = time.time()
         try:
+
             # Get frameset of color and depth
             frames = pipeline.wait_for_frames()
             # frames.get_depth_frame() is a 640x360 depth image
@@ -616,7 +621,8 @@ def run():
             points = pc.calculate(aligned_depth_frame)
 
             vtx = np.asanyarray(points.get_vertices())
-
+            #dfVTX = pd.DataFrame(data=vtx)
+            #dfVTX.to_csv(cwd + "PointCloud.csv", sep=',', index=False, header=None)
             lstPersons3dRealWorld = []
             lstHandRight3dRealWorld = []
             lstHandLeft3dRealWorld = []
@@ -636,6 +642,9 @@ def run():
         leftTemp = op.getKeypoints(op.KeypointType.HAND)[0]
         rightTemp = op.getKeypoints(op.KeypointType.HAND)[1]
 
+
+
+
         print("Open Pose FPS: ", op_fps)
         print("Actual Pose FPS: ", actual_fps)
 
@@ -649,76 +658,73 @@ def run():
             #for x in range(0,numberPersons):
                 #lstPersons3dRealWorld.append(get3DPosWorld(pose, x, True, vtx))
             lstPersons3dRealWorld.extend(get3DPosWorld(pose, 0, True, vtx))
-        normalizedTrainPose = preprocessing.Normalizer().fit_transform(np.asarray(lstPersons3dRealWorld).reshape(1, -1))
+            normalizedTrainPose = preprocessing.Normalizer().fit_transform(np.asarray(lstPersons3dRealWorld).reshape(1, -1))
 
-        if rightTemp is not None:
-            # comment out for enabling for multi person
-            numberRightHands = len(rightTemp)
-            #for y in range(0, numberRightHands):
-            # lstHandRight3dRealWorld.append(get3DPosWorld(rightTemp, y, False, vtx))
-            lstHandRight3dRealWorld.extend(get3DPosWorld(rightTemp, 0, False, vtx))
+            if rightTemp is not None:
+                # comment out for enabling for multi person
+                numberRightHands = len(rightTemp)
+                #for y in range(0, numberRightHands):
+                # lstHandRight3dRealWorld.append(get3DPosWorld(rightTemp, y, False, vtx))
+                lstHandRight3dRealWorld.extend(get3DPosWorld(rightTemp, 0, False, vtx))
 
-             # add relbow and rshoulder and rwrist and the joint btw shoulders(BODY JOINT NUMBER 1)
-            lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[2][0], lstPersons3dRealWorld[2][1], lstPersons3dRealWorld[2][2]]))
-            lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[3][0], lstPersons3dRealWorld[3][1], lstPersons3dRealWorld[3][2]]))
-            lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[4][0], lstPersons3dRealWorld[4][1], lstPersons3dRealWorld[4][2]]))
-            lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[1][0], lstPersons3dRealWorld[1][1], lstPersons3dRealWorld[1][2]]))
+                # add relbow and rshoulder and rwrist and the joint btw shoulders(BODY JOINT NUMBER 1)
+                lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[2][0], lstPersons3dRealWorld[2][1], lstPersons3dRealWorld[2][2]]))
+                lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[3][0], lstPersons3dRealWorld[3][1], lstPersons3dRealWorld[3][2]]))
+                lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[4][0], lstPersons3dRealWorld[4][1], lstPersons3dRealWorld[4][2]]))
+                lstHandRight3dRealWorld.append(np.asarray([lstPersons3dRealWorld[1][0], lstPersons3dRealWorld[1][1], lstPersons3dRealWorld[1][2]]))
 
-            # GET THE RELATIVE POSITIONS OF THE JOINTS ACORDINGLY TO THE MIDDLE OF THE SHOULDERS JOINT(BODY JOINT NUMBER 1)
-            lenA= len(lstHandRight3dRealWorld)
-            for i in range(0, lenA):
-                lstHandRight3dRealWorld[i][0] = lstHandRight3dRealWorld[i][0] - lstHandRight3dRealWorld[24][0]
-                lstHandRight3dRealWorld[i][1] = lstHandRight3dRealWorld[i][1] - lstHandRight3dRealWorld[24][1]
-                lstHandRight3dRealWorld[i][2] = lstHandRight3dRealWorld[i][2] - lstHandRight3dRealWorld[24][2]
+                # GET THE RELATIVE POSITIONS OF THE JOINTS ACORDINGLY TO THE MIDDLE OF THE SHOULDERS JOINT(BODY JOINT NUMBER 1)
+                lenA= len(lstHandRight3dRealWorld)
+                for i in range(0, lenA):
+                    lstHandRight3dRealWorld[i][0] = lstHandRight3dRealWorld[i][0] - lstHandRight3dRealWorld[24][0]
+                    lstHandRight3dRealWorld[i][1] = lstHandRight3dRealWorld[i][1] - lstHandRight3dRealWorld[24][1]
+                    lstHandRight3dRealWorld[i][2] = lstHandRight3dRealWorld[i][2] - lstHandRight3dRealWorld[24][2]
 
-            # REMOVE JOINT #1 FROM THE JOINT LIST FOR BETTER RESULTS IN TRAINING
-            lstHandRight3dRealWorld = lstHandRight3dRealWorld[0:24]
-            normalizedTrainRightHand = preprocessing.Normalizer().fit_transform(np.asarray(lstHandRight3dRealWorld).reshape(1, -1))
+                # REMOVE JOINT #1 FROM THE JOINT LIST FOR BETTER RESULTS IN TRAINING
+                lstHandRight3dRealWorld = lstHandRight3dRealWorld[0:24]
+                normalizedTrainRightHand = preprocessing.Normalizer().fit_transform(np.asarray(lstHandRight3dRealWorld).reshape(1, -1))
 
-        if leftTemp is not None:
-            # comment out for enabling for multi person
-            #numberLeftHands = len(leftTemp)
-            #for z in range(0, numberLeftHands):
+            if leftTemp is not None:
+                # comment out for enabling for multi person
+                #numberLeftHands = len(leftTemp)
+                #for z in range(0, numberLeftHands):
                 #lstHandLeft3dRealWorld.append(get3DPosWorld(leftTemp, z, False, vtx))
-            lstHandLeft3dRealWorld.extend(get3DPosWorld(leftTemp, 0, False, vtx))
+                lstHandLeft3dRealWorld.extend(get3DPosWorld(leftTemp, 0, False, vtx))
 
-            # add lelbow and lshoulder and lwrist and the joint btw shoulders(BODY JOINT NUMBER 1)
-            lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[5][0], lstPersons3dRealWorld[5][1], lstPersons3dRealWorld[5][2]]))
-            lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[6][0], lstPersons3dRealWorld[6][1], lstPersons3dRealWorld[6][2]]))
-            lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[7][0], lstPersons3dRealWorld[7][1], lstPersons3dRealWorld[7][2]]))
-            lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[1][0], lstPersons3dRealWorld[1][1], lstPersons3dRealWorld[1][2]]))
+                # add lelbow and lshoulder and lwrist and the joint btw shoulders(BODY JOINT NUMBER 1)
+                lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[5][0], lstPersons3dRealWorld[5][1], lstPersons3dRealWorld[5][2]]))
+                lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[6][0], lstPersons3dRealWorld[6][1], lstPersons3dRealWorld[6][2]]))
+                lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[7][0], lstPersons3dRealWorld[7][1], lstPersons3dRealWorld[7][2]]))
+                lstHandLeft3dRealWorld.append(np.asarray([lstPersons3dRealWorld[1][0], lstPersons3dRealWorld[1][1], lstPersons3dRealWorld[1][2]]))
 
-            # GET THE RELATIVE POSITIONS OF THE JOINTS ACORDINGLY TO THE MIDDLE OF THE SHOULDERS JOINT(BODY JOINT NUMBER 1)
-            lenA = len(lstHandLeft3dRealWorld)
-            for i in range(0, lenA):
-                lstHandLeft3dRealWorld[i][0] = -(lstHandLeft3dRealWorld[i][0] - lstHandLeft3dRealWorld[24][0])
-                lstHandLeft3dRealWorld[i][1] = lstHandLeft3dRealWorld[i][1] - lstHandLeft3dRealWorld[24][1]
-                lstHandLeft3dRealWorld[i][2] = lstHandLeft3dRealWorld[i][2] - lstHandLeft3dRealWorld[24][2]
-            # REMOVE JOINT #1 FROM THE JOINT LIST FOR BETTER RESULTS IN TRAINING
-            lstHandLeft3dRealWorld = lstHandLeft3dRealWorld[0:24]
-            normalizedTrainLeftHand = preprocessing.Normalizer().fit_transform(np.asarray(lstHandLeft3dRealWorld).reshape(1, -1))
+                # GET THE RELATIVE POSITIONS OF THE JOINTS ACORDINGLY TO THE MIDDLE OF THE SHOULDERS JOINT(BODY JOINT NUMBER 1)
+                lenA = len(lstHandLeft3dRealWorld)
+                for i in range(0, lenA):
+                    lstHandLeft3dRealWorld[i][0] = -(lstHandLeft3dRealWorld[i][0] - lstHandLeft3dRealWorld[24][0])
+                    lstHandLeft3dRealWorld[i][1] = lstHandLeft3dRealWorld[i][1] - lstHandLeft3dRealWorld[24][1]
+                    lstHandLeft3dRealWorld[i][2] = lstHandLeft3dRealWorld[i][2] - lstHandLeft3dRealWorld[24][2]
+                # REMOVE JOINT #1 FROM THE JOINT LIST FOR BETTER RESULTS IN TRAINING
+                lstHandLeft3dRealWorld = lstHandLeft3dRealWorld[0:24]
+                normalizedTrainLeftHand = preprocessing.Normalizer().fit_transform(np.asarray(lstHandLeft3dRealWorld).reshape(1, -1))
 
 
-
-        if pose[0].max()> 0:
             if rightTemp.max() > 0 or leftTemp.max() > 0 :
-
                 try:
                     #resultsvcCLF_Right = svcCLF.predict(normalizedTrainRightHand)[0]  # svm result
 
                     ##the other prediction models are just made for testing- can be used if wanted
-                    resultGestureTree_Right = decisionTreeCLF.predict(normalizedTrainRightHand)[0]
-                    resultKnn_Right = kNeighborsCLF.predict(normalizedTrainRightHand)
-                    resultLinearRegressionCLF_Right = linearLogisticRegressionCLF.predict(normalizedTrainRightHand)
-                    resultLinearRegression_Right = modelLinearRegressionCLF.predict(normalizedTrainRightHand)
-                    resultLinearSVC_Right = linearSVCCLF.predict(normalizedTrainRightHand)
+                    #resultGestureTree_Right = decisionTreeCLF.predict(normalizedTrainRightHand)[0]
+                    #resultKnn_Right = kNeighborsCLF.predict(normalizedTrainRightHand)
+                    #resultLinearRegressionCLF_Right = linearLogisticRegressionCLF.predict(normalizedTrainRightHand)
+                    #resultLinearRegression_Right = modelLinearRegressionCLF.predict(normalizedTrainRightHand)
+                    #resultLinearSVC_Right = linearSVCCLF.predict(normalizedTrainRightHand)
                     #rr= svcCLF.decision_function(normalizedTrainRightHand)
                     #nn = kNeighborsCLF.decision_function(normalizedTrainRightHand)
                     #mm= linearSVCCLF.decision_function(normalizedTrainRightHand)
 
-                    resultsvcCLF_Right = clf.predict(normalizedTrainRightHand)[0]  # BEST FITTER RESULT
+                    resultsvcCLF_Right = classifier.predict(normalizedTrainRightHand)[0]  # BEST FITTER RESULT
 
-                    resultsvcCLF_Left = clf.predict(normalizedTrainLeftHand)[0]  # BEST FITTER RESULT
+                    resultsvcCLF_Left = classifier.predict(normalizedTrainLeftHand)[0]  # BEST FITTER RESULT
 
                     if resultsvcCLF_Right == 1:
                         rightGestureName = "Punch"
