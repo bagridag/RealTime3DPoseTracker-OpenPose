@@ -650,6 +650,7 @@ def run():
 
         np.set_printoptions(suppress=True)
 
+        blank_image = np.zeros((HEIGHT, WIDTH, 3), np.uint8)
         res = op.render(color_image)
 
         if pose[0] is not None:
@@ -662,7 +663,7 @@ def run():
 
             if rightTemp is not None:
                 # comment out for enabling for multi person
-                numberRightHands = len(rightTemp)
+                #numberRightHands = len(rightTemp)
                 #for y in range(0, numberRightHands):
                 # lstHandRight3dRealWorld.append(get3DPosWorld(rightTemp, y, False, vtx))
                 lstHandRight3dRealWorld.extend(get3DPosWorld(rightTemp, 0, False, vtx))
@@ -744,9 +745,17 @@ def run():
                     elif resultsvcCLF_Left == 4:
                         leftGestureName = "NoGesture"
 
+                    cv2.putText(blank_image, 'RightGESTURE= %s' % (rightGestureName), (0, 100), 50, 1,
+                                (255, 255, 255))
+
+                    cv2.putText(blank_image,
+                                'LeftGESTURE= %s' % (leftGestureName),
+                                (0, 200), 50, 1, (255, 255, 255))
                     cv2.putText(res, 'UI FPS = %f, OP FPS = %f, RightGESTURE= %s, LeftGESTURE= %s' % (
                         actual_fps, op_fps, rightGestureName, leftGestureName), (20, 20), 0, 0.4, (0, 0, 255))
-                    cv2.imshow("OpenPose result", res)
+                    images = np.hstack((blank_image, res))
+                    cv2.imshow("OpenPose result", images)
+                    #cv2.imshow("OpenPose result", res)
 
                 except IndexError:
                     print("This class has no label")
