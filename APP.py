@@ -661,6 +661,9 @@ def run():
             lstPersons3dRealWorld.extend(get3DPosWorld(pose, 0, True, vtx))
             normalizedTrainPose = preprocessing.Normalizer().fit_transform(np.asarray(lstPersons3dRealWorld).reshape(1, -1))
 
+
+
+
             if rightTemp is not None:
                 # comment out for enabling for multi person
                 #numberRightHands = len(rightTemp)
@@ -709,8 +712,8 @@ def run():
                 normalizedTrainLeftHand = preprocessing.Normalizer().fit_transform(np.asarray(lstHandLeft3dRealWorld).reshape(1, -1))
 
 
-            if rightTemp.max() > 0 or leftTemp.max() > 0 :
-                try:
+            #if rightTemp.max() > 0 or leftTemp.max() > 0 :
+            try:
                     #resultsvcCLF_Right = svcCLF.predict(normalizedTrainRightHand)[0]  # svm result
 
                     ##the other prediction models are just made for testing- can be used if wanted
@@ -723,47 +726,50 @@ def run():
                     #nn = kNeighborsCLF.decision_function(normalizedTrainRightHand)
                     #mm= linearSVCCLF.decision_function(normalizedTrainRightHand)
 
-                    resultsvcCLF_Right = classifier.predict(normalizedTrainRightHand)[0]  # BEST FITTER RESULT
+                resultsvcCLF_Right = classifier.predict(normalizedTrainRightHand)[0]  # BEST FITTER RESULT
 
-                    resultsvcCLF_Left = classifier.predict(normalizedTrainLeftHand)[0]  # BEST FITTER RESULT
+                resultsvcCLF_Left = classifier.predict(normalizedTrainLeftHand)[0]  # BEST FITTER RESULT
+            except IndexError:
+                print("This class has no label")
 
-                    if resultsvcCLF_Right == 1:
-                        rightGestureName = "Punch"
-                    elif resultsvcCLF_Right == 2:
-                        rightGestureName = "Wave"
-                    elif resultsvcCLF_Right == 3:
-                        rightGestureName = "Shoot"
-                    elif resultsvcCLF_Right == 4:
-                        rightGestureName = "NoGesture"
 
-                    if resultsvcCLF_Left == 1:
-                        leftGestureName = "Punch"
-                    elif resultsvcCLF_Left == 2:
-                        leftGestureName = "Wave"
-                    elif resultsvcCLF_Left == 3:
-                        leftGestureName = "Shoot"
-                    elif resultsvcCLF_Left == 4:
-                        leftGestureName = "NoGesture"
-
-                    cv2.putText(blank_image, 'RightGESTURE= %s' % (rightGestureName), (0, 100), 50, 1,
-                                (255, 255, 255))
-
-                    cv2.putText(blank_image,
-                                'LeftGESTURE= %s' % (leftGestureName),
-                                (0, 200), 50, 1, (255, 255, 255))
-                    cv2.putText(res, 'UI FPS = %f, OP FPS = %f, RightGESTURE= %s, LeftGESTURE= %s' % (
-                        actual_fps, op_fps, rightGestureName, leftGestureName), (20, 20), 0, 0.4, (0, 0, 255))
-                    images = np.hstack((blank_image, res))
-                    cv2.imshow("OpenPose result", images)
-                    #cv2.imshow("OpenPose result", res)
-
-                except IndexError:
-                    print("This class has no label")
-
+            if rightTemp.max() > 0:
+                if resultsvcCLF_Right == 1:
+                    rightGestureName = "Punch"
+                elif resultsvcCLF_Right == 2:
+                    rightGestureName = "Wave"
+                elif resultsvcCLF_Right == 3:
+                    rightGestureName = "Shoot"
+                elif resultsvcCLF_Right == 4:
+                    rightGestureName = "NoGesture"
             else:
-                cv2.putText(res, 'UI FPS = %f, OP FPS = %f, Gesture= No gesture' % (
-                    actual_fps, op_fps), (20, 20), 0, 0.5, (0, 0, 255))
-                cv2.imshow("OpenPose result", res)
+                rightGestureName="NoRightHandData"
+
+            if leftTemp.max() > 0 :
+                if resultsvcCLF_Left == 1:
+                    leftGestureName = "Punch"
+                elif resultsvcCLF_Left == 2:
+                    leftGestureName = "Wave"
+                elif resultsvcCLF_Left == 3:
+                    leftGestureName = "Shoot"
+                elif resultsvcCLF_Left == 4:
+                    leftGestureName = "NoGesture"
+            else:
+                leftGestureName="NoLeftHandData"
+
+            cv2.putText(blank_image, 'RightGESTURE= %s' % (rightGestureName), (0, 100), 50, 1,(255, 255, 255))
+
+            cv2.putText(blank_image,'LeftGESTURE= %s' % (leftGestureName),(0, 200), 50, 1, (255, 255, 255))
+            cv2.putText(res, 'UI FPS = %f, OP FPS = %f, RightGESTURE= %s, LeftGESTURE= %s' % (actual_fps, op_fps, rightGestureName, leftGestureName), (20, 20), 0, 0.4, (0, 0, 255))
+            images = np.hstack((blank_image, res))
+            cv2.imshow("OpenPose result", images)
+            #cv2.imshow("OpenPose result", res)
+
+
+
+        #else:
+            #cv2.putText(res, 'UI FPS = %f, OP FPS = %f, Gesture= No gesture' % (actual_fps, op_fps), (20, 20), 0, 0.5, (0, 0, 255))
+            #cv2.imshow("OpenPose result", res)
         else:
             cv2.putText(color_image, 'No skeleton detected', (20, 20), 0, 0.5, (0, 0, 255))
             cv2.imshow("OpenPose result", color_image)
